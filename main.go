@@ -32,6 +32,9 @@ func (t Training) distance() float64 {
 
 // Метод meanSpeed(): считаем ср.скорость в км/ч.
 func (t Training) meanSpeed() float64 {
+	if t.Duration.Hours() == 0 {
+		fmt.Println("На ноль делить нельзя!")
+	}
 	speed := t.distance() / t.Duration.Hours()
 	return speed
 }
@@ -114,6 +117,9 @@ type Walking struct {
 
 // Calories - метод для подсчета калорий при ходьбе.
 func (w Walking) Calories() float64 {
+	if w.Height == 0 {
+		fmt.Println("На ноль делить нельзя!")
+	}
 	squareSpeed := math.Pow(w.meanSpeed()*KmHInMsec, 2)
 	heightInM := w.Height / CmInM
 	spentCaloriesWalking := (CaloriesWeightMultiplier*w.Weight + (squareSpeed/heightInM)*CaloriesSpeedHeightMultiplier*w.Weight) * w.Duration.Hours() * MinInHours
@@ -138,10 +144,31 @@ type Swimming struct {
 	CountPool  int
 }
 
+// distance - переопределил новую дистанцию для плавания.
+func (s Swimming) distance() float64 {
+	distance := float64(s.LengthPool*s.CountPool) / MInKm
+	return distance
+}
+
 // meanSpeed - считаем скорость во время плавания.
 func (s Swimming) meanSpeed() float64 {
+	if s.Duration.Hours() == 0 {
+		fmt.Println("На ноль делить нельзя!")
+	}
 	swimmingSpeed := float64(s.LengthPool*s.CountPool) / MInKm / s.Duration.Hours()
 	return swimmingSpeed
+}
+
+// TrainingInfoForSwimming - TrainingInfo, только для плавания
+func (s Swimming) TrainingInfoForSwimming() InfoMessage {
+	trainingInfo := InfoMessage{
+		TrainingType: s.TrainingType,
+		Duration:     s.Duration,
+		Distance:     s.distance(),
+		Speed:        s.meanSpeed(),
+		Calories:     s.Calories(),
+	}
+	return trainingInfo
 }
 
 // Calories - метод для подсчета калорий при плавании.
@@ -152,7 +179,7 @@ func (s Swimming) Calories() float64 {
 
 // TrainingInfo - вернули инфу с тренировкой про плавание.
 func (s Swimming) TrainingInfo() InfoMessage {
-	return s.Training.TrainingInfo()
+	return s.TrainingInfoForSwimming()
 }
 
 // ReadData - работает для всех типов тренировок. Получаем кол-во калорий. В инфо кладем структурку о тренировке и присваиваем info.Calories посчитанные калории.
